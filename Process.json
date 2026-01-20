@@ -1,0 +1,240 @@
+{
+  "name": "http-llm-telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "text-input",
+        "responseMode": "=onReceived",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9578deaa-4347-4f0f-9723-5bb21b970c6e",
+      "name": "Webhook",
+      "webhookId": "65b29501-4140-4c1b-b663-0a379583d4c1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "498d0614-0dba-4153-a777-1d0d9cc34f95",
+              "name": "input_text",
+              "value": "={{ $json.body.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        0
+      ],
+      "id": "af290503-6e0e-4f58-9931-1c39028f89b6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "be520978-612e-4ffc-8da3-20bfeb7558e0",
+              "leftValue": "={{ $json.input_text.length }}",
+              "rightValue": 100,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        352,
+        0
+      ],
+      "id": "743eab47-6c9a-404a-989b-290b3bcbb26e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Сделай краткое резюме следующего текста:\n\n{{ $json.input_text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        560,
+        -96
+      ],
+      "id": "fea7bcb2-9983-4426-9f77-6543a4d2469c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "chatId": "549836970",
+        "text": "=Результат обработки:  {{$json[\"output\"] || $json[\"text\"]}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        -96
+      ],
+      "id": "6af1bf8a-d700-446d-97d6-5c4500a92f7b",
+      "name": "Send a text message",
+      "webhookId": "e60a694f-a8a2-42ac-bb41-ebd04eadd45d",
+      "credentials": {
+        "telegramApi": {
+          "id": "k35pyaD8Eu4UY7Wo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        560,
+        48
+      ],
+      "id": "883e5b05-cfd1-42cf-8393-c29ef30850be",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YPWnhEILyDYeVi2r",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "549836970",
+        "text": "Текст менее 100 символов. Пожалуйста, отправьте текст побольше.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        240
+      ],
+      "id": "65599e25-f6ed-4183-8fa1-2c54b559eaeb",
+      "name": "Send a text message1",
+      "webhookId": "0196ee1e-8b8c-4f14-8195-b78f87ce847f",
+      "credentials": {
+        "telegramApi": {
+          "id": "k35pyaD8Eu4UY7Wo",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "eda211ad-5871-4a1c-9b7c-4e8d3551f6e6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e34296a9db7cab8f5740dbf668a669c3acb1c973d0e564048b5fe8ed64a4b9e0"
+  },
+  "id": "XAUF0TD_zB_dwXgnm8FfM",
+  "tags": []
+}
